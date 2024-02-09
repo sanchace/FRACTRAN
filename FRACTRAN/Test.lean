@@ -31,16 +31,22 @@ def runProg (prog : FProg) : FRun :=
   | Nat.zero => z
   | Nat.succ k => next prog $ runProg prog z k
 
-def n : Int := 6
+def n : Int := 2 ^ 3 * 3 ^ 7
 #eval LazyList.toList $ runProg' [Rat.mk' 2 3] n
-#eval runProg [Rat.mk' 2 3] n 0
+#eval runProg [Rat.mk' 2 3] n 7
 
 def adder (a b : Nat) := runProg [Rat.mk' 2 3] (2^a * 3^b)
+
+lemma add_correct (a b : Nat) : adder a b b = 2 ^ (a + b) := by
+  sorry
+
+lemma add_halts {a n N : Nat} (h : n > N) (last : adder a N N = 2 ^ (a + N)) : adder a N n = 0 := by
+  sorry
 
 theorem adder_adds : ∀ a b : Nat, ∃ K : Nat, (adder a b K = 2^(a + b) ∧ ∀ n : Nat, n > K → adder a b n = 0) := by
   intro a b
   use b
   constructor
-  · sorry
+  · exact add_correct a b
   · intro n h
-    sorry
+    exact add_halts h $ add_correct a b
