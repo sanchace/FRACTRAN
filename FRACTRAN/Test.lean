@@ -28,8 +28,8 @@ unsafe def runProg' (prog : FProg) : FRun' :=
 
 def runProg (prog : FProg) : FRun :=
   fun z n ↦ match n with
-  | Nat.zero => z
-  | Nat.succ k => next prog $ runProg prog z k
+            | Nat.zero   => z
+            | Nat.succ k => next prog $ runProg prog z k
 
 def n : Int := 2 ^ 3 * 3 ^ 7
 #eval LazyList.toList $ runProg' [Rat.mk' 2 3] n
@@ -37,8 +37,53 @@ def n : Int := 2 ^ 3 * 3 ^ 7
 
 def adder (a b : Nat) := runProg [Rat.mk' 2 3] (2^a * 3^b)
 
-lemma add_correct (a b : Nat) : adder a b b = 2 ^ (a + b) := by
+lemma add_once {m : Int} : next [Rat.mk' 2 3] (3 * m) = 2 * m := by
   sorry
+
+lemma add_some {a b c : Nat} (h : c ≤ b) : adder a b c = 2 ^ (a + c) * 3 ^ (b - c) := by
+  induction' c with c ih
+  · rw [Nat.add_zero, Nat.sub_zero]
+    conv =>
+      lhs
+      change 2 ^ a * 3 ^ b
+  · conv =>
+      congr
+      · change next [Rat.mk' 2 3] $ adder a b c
+        rw [ih $ le_trans (Nat.le.step Nat.le.refl) h]
+        rhs
+        conv =>
+          rhs
+          conv =>
+            rhs
+            rw [(Nat.succ_sub_succ b c).symm, Nat.succ_sub h]
+          change 3 ^ (b - Nat.succ c) * 3
+          rw [mul_comm]
+        rw [← mul_assoc]
+        conv =>
+          lhs
+          rw [mul_comm]
+        rw [mul_assoc]
+      · conv =>
+          lhs
+          conv =>
+            rhs
+            rw [Nat.add_succ]
+          change 2 ^ (a + c) * 2
+          rw [mul_comm]
+        rw [mul_assoc]
+    exact add_once
+
+lemma add_correct (a b : Nat) : adder a b b = 2 ^ (a + b) := by
+  convert add_some (le_refl b)
+  conv =>
+    rhs
+    conv =>
+      rhs
+      conv =>
+        rhs
+        rw [Nat.sub_self b]
+      change 1
+    rw [mul_one]
 
 lemma add_halts {a n N : Nat} (h : n > N) (last : adder a N N = 2 ^ (a + N)) : adder a N n = 0 := by
   sorry
