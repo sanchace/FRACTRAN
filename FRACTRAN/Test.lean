@@ -1,18 +1,18 @@
 import Mathlib.Data.LazyList
 import Mathlib.Tactic
 
-
--- Fractran Program
+-- FRACTRAN Program
+-- Complete Syntax of FRACTRAN
 def FProg : Type := List Rat
 
-
--- The program state before and after a run of a Fractran Program
+-- sequence of states (run) of FRACTRAN Program and input
+-- Complete Semantics of FRACTRAN
 def FRun : Type := Int → Nat → Int
 
--- A List of program states
+-- list of program states
 def FRun' : Type := Int -> LazyList Int
 
--- Same as next but with the option monad
+-- same as next but with the option monad
 def next' (prog : FProg) (n : Int) : Option Int :=
   match prog with
   | []      => none
@@ -26,19 +26,21 @@ def next (prog : FProg) (n : Int) : Int :=
   | []      => 0
   | q :: qs => cond (Rat.isInt (q * n)) (q * n).num $ next qs n
 
--- Same as runProg but with the Option monad
+-- list version of runProg
 unsafe def runProg' (prog : FProg) : FRun' :=
   fun z ↦ match (next' prog z) with
           | none   => LazyList.nil
           | some k => LazyList.cons k $ runProg' prog k -- coercion
 
--- Runs the program once
+-- computes the run of FRACTRAN program and input
+-- Complete Implementation of FRACTRAN
 def runProg (prog : FProg) : FRun :=
   fun z n ↦ match n with
             | Nat.zero   => z
             | Nat.succ k => next prog $ runProg prog z k
 
 --def n : Int := 2 ^ 3 * 3 ^ 7
+--#eval n
 --#eval LazyList.toList $ runProg' [(2 : Rat) / 3] n
 --#eval runProg [(2 : Rat) / 3] n 7
 
@@ -49,7 +51,6 @@ lemma add_once {m : Int} : next [(2 : Rat) / 3] (3 * m) = 2 * m := by
   conv =>
     lhs
     unfold next
-    unfold next
     simp
     conv =>
       congr
@@ -59,7 +60,7 @@ lemma add_once {m : Int} : next [(2 : Rat) / 3] (3 * m) = 2 * m := by
           lhs
           rw [div_mul, div_self (by norm_num), div_one]
         change (↑ (Int.ofNat 2)) * ↑ m
-        rw [(Int.cast_mul (Int.ofNat 2) m).symm]
+        rw [← Int.cast_mul (Int.ofNat 2) m]
         change ↑(2 * m)
       · rhs
         rw [← mul_assoc]
@@ -67,7 +68,7 @@ lemma add_once {m : Int} : next [(2 : Rat) / 3] (3 * m) = 2 * m := by
           lhs
           rw [div_mul, div_self (by norm_num), div_one]
         change (↑ (Int.ofNat 2)) * ↑ m
-        rw [(Int.cast_mul (Int.ofNat 2) m).symm]
+        rw [← Int.cast_mul (Int.ofNat 2) m]
         change ↑(2 * m)
       · skip
 
@@ -87,7 +88,7 @@ lemma add_some {a b c : Nat} (h : c ≤ b) : adder a b c = 2 ^ (a + c) * 3 ^ (b 
           rhs
           conv =>
             rhs
-            rw [(Nat.succ_sub_succ b c).symm, Nat.succ_sub h]
+            rw [← Nat.succ_sub_succ b c, Nat.succ_sub h]
           change 3 ^ (b - Nat.succ c) * 3
           rw [mul_comm]
         rw [← mul_assoc]
@@ -118,6 +119,9 @@ lemma add_correct (a b : Nat) : adder a b b = 2 ^ (a + b) := by
       change 1
     rw [mul_one]
 
+example (a b : Nat) : ((a == b) = true) ↔ (a = b) := by
+  exact beq_iff_eq a b
+
 -- proving that the adder will halt (be 0) at some point n > N
 lemma add_halts {a n N : Nat} (h : n > N) (last : adder a N N = 2 ^ (a + N)) : adder a N n = 0 := by
   induction' n with n ih
@@ -145,8 +149,10 @@ lemma add_halts {a n N : Nat} (h : n > N) (last : adder a N N = 2 ^ (a + N)) : a
         · unfold next
       unfold cond
       split
-      · case pos.h_1 _ heq =>
+      · case pos.h_1 _ h'' =>
         exfalso
+        unfold Rat.isInt at h''
+        --rw [beq_iff_eq] at h'' --inst mismatch instBEq vs instBEqNat ??
 
         sorry
       · exact rfl
