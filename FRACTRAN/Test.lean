@@ -118,9 +118,30 @@ lemma add_halts {a n N : Nat} (h : n > N) (last : adder a N N = 2 ^ (a + N)) : a
       change adder a N n
     by_cases h' : n = N
     · rw [h', last]
-      sorry
+      unfold next
+      simp
+      conv =>
+        lhs
+        congr
+        · rhs
+          rw [div_mul_eq_mul_div, mul_comm, ← pow_succ']
+          skip
+        · rhs
+          rw [div_mul_eq_mul_div, mul_comm, ← pow_succ']
+          skip
+        · unfold next
+      unfold cond
+      split
+      · case pos.h_1 _ heq =>
+        exfalso
+
+        sorry
+      · exact rfl
     · rw [ih ∘ Ne.lt_of_le' h' ∘ Nat.lt_succ.mp $ h]
-      sorry
+      unfold next
+      simp
+      conv =>
+        skip
 
 theorem adder_adds : ∀ a b : Nat, ∃ K : Nat, (adder a b K = 2^(a + b) ∧ ∀ n : Nat, n > K → adder a b n = 0) := by
   intro a b
