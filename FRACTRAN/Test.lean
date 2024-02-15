@@ -46,6 +46,9 @@ def runProg (prog : FProg) : FRun :=
 
 def adder (a b : Nat) := runProg [(2 : Rat) / 3] (2^a * 3^b)
 
+lemma frac_denom_one_divides { f : Rat } (bnz : b ≠ 0) (h : f.den = 1) : b ∣ a := by
+  sorry
+
 -- runs the program 2/3 once on a multiple of 3 and returns it as a multiple of 2
 lemma add_once {m : Int} : next [(2 : Rat) / 3] (3 * m) = 2 * m := by
   conv =>
@@ -152,9 +155,13 @@ lemma add_halts {a n N : Nat} (h : n > N) (last : adder a N N = 2 ^ (a + N)) : a
       · case pos.h_1 _ h'' =>
         exfalso
         unfold Rat.isInt at h''
-        --rw [beq_iff_eq] at h'' --inst mismatch instBEq vs instBEqNat ??
-
-        sorry
+        simp at h''
+        have tnez : 3 ≠ 0 := by norm_num
+        suffices ∃ n, 3 ∣ 2^n by
+          -- Something something unique factorization
+          sorry
+        use a + N + 1
+        apply frac_denom_one_divides tnez h''
       · exact rfl
     · rw [ih ∘ Ne.lt_of_le' h' ∘ Nat.lt_succ.mp $ h]
       unfold next
