@@ -1,12 +1,18 @@
 import Mathlib.Data.LazyList
 import Mathlib.Tactic
 
+
+-- Fractran Program
 def FProg : Type := List Rat
 
+
+-- The program state before and after a run of a Fractran Program
 def FRun : Type := Int → Nat → Int
 
+-- A List of program states
 def FRun' : Type := Int -> LazyList Int
 
+-- Same as next but with the option monad
 def next' (prog : FProg) (n : Int) : Option Int :=
   match prog with
   | []      => none
@@ -14,16 +20,19 @@ def next' (prog : FProg) (n : Int) : Option Int :=
                then (q * n).num -- coercion
                else next' qs n
 
+-- gets the number that when multiplied by a fraction in the FProg is integral
 def next (prog : FProg) (n : Int) : Int :=
   match prog with
   | []      => 0
   | q :: qs => cond (Rat.isInt (q * n)) (q * n).num $ next qs n
 
+-- Same as runProg but with the Option monad
 unsafe def runProg' (prog : FProg) : FRun' :=
   fun z ↦ match (next' prog z) with
           | none   => LazyList.nil
           | some k => LazyList.cons k $ runProg' prog k -- coercion
 
+-- Runs the program once
 def runProg (prog : FProg) : FRun :=
   fun z n ↦ match n with
             | Nat.zero   => z
@@ -35,6 +44,7 @@ def runProg (prog : FProg) : FRun :=
 
 def adder (a b : Nat) := runProg [(2 : Rat) / 3] (2^a * 3^b)
 
+-- runs the program 2/3 once on a multiple of 3 and returns it as a multiple of 2
 lemma add_once {m : Int} : next [(2 : Rat) / 3] (3 * m) = 2 * m := by
   conv =>
     lhs
@@ -61,6 +71,7 @@ lemma add_once {m : Int} : next [(2 : Rat) / 3] (3 * m) = 2 * m := by
         change ↑(2 * m)
       · skip
 
+-- runs the adder program on input
 lemma add_some {a b c : Nat} (h : c ≤ b) : adder a b c = 2 ^ (a + c) * 3 ^ (b - c) := by
   induction' c with c ih
   · rw [Nat.add_zero, Nat.sub_zero]
@@ -94,6 +105,7 @@ lemma add_some {a b c : Nat} (h : c ≤ b) : adder a b c = 2 ^ (a + c) * 3 ^ (b 
         rw [mul_assoc]
     exact add_once
 
+--
 lemma add_correct (a b : Nat) : adder a b b = 2 ^ (a + b) := by
   convert add_some (le_refl b)
   conv =>
@@ -106,6 +118,7 @@ lemma add_correct (a b : Nat) : adder a b b = 2 ^ (a + b) := by
       change 1
     rw [mul_one]
 
+-- proving that the adder will halt (be 0) at some point n > N
 lemma add_halts {a n N : Nat} (h : n > N) (last : adder a N N = 2 ^ (a + N)) : adder a N n = 0 := by
   induction' n with n ih
   · exfalso
@@ -118,10 +131,13 @@ lemma add_halts {a n N : Nat} (h : n > N) (last : adder a N N = 2 ^ (a + N)) : a
       change adder a N n
     by_cases h' : n = N
     · rw [h', last]
+
       sorry
     · rw [ih ∘ Ne.lt_of_le' h' ∘ Nat.lt_succ.mp $ h]
       sorry
 
+-- proof that the adder adds two numbers into the 2 register
+-- and for all iterations after that produces 0
 theorem adder_adds : ∀ a b : Nat, ∃ K : Nat, (adder a b K = 2^(a + b) ∧ ∀ n : Nat, n > K → adder a b n = 0) := by
   intro a b
   use b
