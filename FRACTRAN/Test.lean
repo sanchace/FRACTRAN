@@ -109,15 +109,19 @@ lemma add_some {a b c : Nat} (h : c ≤ b) : adder a b c = 2 ^ (a + c) * 3 ^ (b 
 --
 lemma add_correct (a b : Nat) : adder a b b = 2 ^ (a + b) := by
   convert add_some (le_refl b)
+  rw [Nat.sub_self b]
   conv =>
     rhs
-    conv =>
-      rhs
-      conv =>
-        rhs
-        rw [Nat.sub_self b]
-      change 1
-    rw [mul_one]
+    rw [Nat.pow_zero 3]
+  -- conv =>
+  --   rhs
+  --   conv =>
+  --     rhs
+  --     conv =>
+  --       rhs
+  --       rw [Nat.sub_self b]
+  --     change 1
+  --   rw [mul_one]
 
 example (a b : Nat) : ((a == b) = true) ↔ (a = b) := by
   exact beq_iff_eq a b
