@@ -46,31 +46,18 @@ def runProg (prog : FProg) : FRun :=
 
 def adder (a b : Nat) := runProg [(2 : Rat) / 3] (2^a * 3^b)
 
--- runs the program 2/3 once on a multiple of 3 and returns it as a multiple of 2
+-- runs the program 2/3 once on a multiple of 3 and returns it as a multiple of
 lemma add_once {m : Int} : next [(2 : Rat) / 3] (3 * m) = 2 * m := by
   conv =>
     lhs
     unfold next
     simp
-    conv =>
-      congr
-      · rhs
-        rw [← mul_assoc]
-        conv =>
-          lhs
-          rw [div_mul, div_self (by norm_num), div_one]
-        change (↑ (Int.ofNat 2)) * ↑ m
-        rw [← Int.cast_mul (Int.ofNat 2) m]
-        change ↑(2 * m)
-      · rhs
-        rw [← mul_assoc]
-        conv =>
-          lhs
-          rw [div_mul, div_self (by norm_num), div_one]
-        change (↑ (Int.ofNat 2)) * ↑ m
-        rw [← Int.cast_mul (Int.ofNat 2) m]
-        change ↑(2 * m)
-      · skip
+    congr
+    · rw [← mul_assoc, div_mul, div_self (by norm_num), div_one]
+      rw [two_mul, ← Int.cast_add, ← two_mul]
+    · rw [← mul_assoc, div_mul, div_self (by norm_num), div_one]
+      rw [two_mul, ← Int.cast_add, ← two_mul]
+    · skip
 
 -- runs the adder program on input
 lemma add_some {a b c : Nat} (h : c ≤ b) : adder a b c = 2 ^ (a + c) * 3 ^ (b - c) := by
@@ -85,15 +72,14 @@ lemma add_some {a b c : Nat} (h : c ≤ b) : adder a b c = 2 ^ (a + c) * 3 ^ (b 
         rw [ih $ le_trans (Nat.le.step Nat.le.refl) h]
         rhs
         rw [← Nat.succ_sub_succ b c, Nat.succ_sub h]
-        conv =>
-          rhs
-          change 3 ^ (b - Nat.succ c) * 3
+        rw [pow_succ 3 _]
         rw [← mul_assoc, mul_comm _ 3]
       · rw [Nat.add_succ]
         conv =>
           lhs
           change 2 ^ (a + c) * 2
         rw [mul_comm _ 2, mul_assoc]
+    rw [mul_assoc 3 _]
     exact add_once
 
 --
