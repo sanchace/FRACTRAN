@@ -84,44 +84,22 @@ lemma add_some {a b c : Nat} (h : c ≤ b) : adder a b c = 2 ^ (a + c) * 3 ^ (b 
       · change next [(2 : Rat) / 3] $ adder a b c
         rw [ih $ le_trans (Nat.le.step Nat.le.refl) h]
         rhs
+        rw [← Nat.succ_sub_succ b c, Nat.succ_sub h]
         conv =>
           rhs
-          conv =>
-            rhs
-            rw [← Nat.succ_sub_succ b c, Nat.succ_sub h]
           change 3 ^ (b - Nat.succ c) * 3
-          rw [mul_comm]
-        rw [← mul_assoc]
+        rw [← mul_assoc, mul_comm _ 3]
+      · rw [Nat.add_succ]
         conv =>
           lhs
-          rw [mul_comm]
-        rw [mul_assoc]
-      · conv =>
-          lhs
-          conv =>
-            rhs
-            rw [Nat.add_succ]
           change 2 ^ (a + c) * 2
-          rw [mul_comm]
-        rw [mul_assoc]
+        rw [mul_comm _ 2, mul_assoc]
     exact add_once
 
 --
 lemma add_correct (a b : Nat) : adder a b b = 2 ^ (a + b) := by
   convert add_some (le_refl b)
-  rw [Nat.sub_self b]
-  conv =>
-    rhs
-    rw [Nat.pow_zero 3]
-  -- conv =>
-  --   rhs
-  --   conv =>
-  --     rhs
-  --     conv =>
-  --       rhs
-  --       rw [Nat.sub_self b]
-  --     change 1
-  --   rw [mul_one]
+  rw [Nat.sub_self b, pow_zero, mul_one]
 
 example (a b : Nat) : ((a == b) = true) ↔ (a = b) := by
   exact beq_iff_eq a b
