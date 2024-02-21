@@ -48,10 +48,10 @@ def adder (a b : Nat) := runProg [(2 : Rat) / 3] (2^a * 3^b)
 
 -- runs the program 2/3 once on a multiple of 3 and returns it as a multiple of
 lemma add_once {m : Int} : next [(2 : Rat) / 3] (3 * m) = 2 * m := by
+  unfold next
+  simp
   conv =>
     lhs
-    unfold next
-    simp
     congr
     · rw [← mul_assoc, div_mul, div_self (by norm_num), div_one]
       rw [two_mul, ← Int.cast_add, ← two_mul]
@@ -63,22 +63,17 @@ lemma add_once {m : Int} : next [(2 : Rat) / 3] (3 * m) = 2 * m := by
 lemma add_some {a b c : Nat} (h : c ≤ b) : adder a b c = 2 ^ (a + c) * 3 ^ (b - c) := by
   induction' c with c ih
   · rw [Nat.add_zero, Nat.sub_zero]
-    conv =>
-      lhs
-      change 2 ^ a * 3 ^ b
+    exact rfl
   · conv =>
       congr
       · change next [(2 : Rat) / 3] $ adder a b c
-        rw [ih $ le_trans (Nat.le.step Nat.le.refl) h]
-        rhs
-        rw [← Nat.succ_sub_succ b c, Nat.succ_sub h]
-        rw [pow_succ 3 _]
-        rw [← mul_assoc, mul_comm _ 3]
-      · rw [Nat.add_succ]
-        conv =>
-          lhs
-          change 2 ^ (a + c) * 2
-        rw [mul_comm _ 2, mul_assoc]
+        rw [ih $ le_trans (Nat.le.step Nat.le.refl) h,
+          ← Nat.succ_sub_succ b c,
+          Nat.succ_sub h,
+          pow_succ 3 _,
+          ← mul_assoc,
+          mul_comm _ 3]
+      · rw [Nat.add_succ, pow_succ, mul_assoc]
     rw [mul_assoc 3 _]
     exact add_once
 
