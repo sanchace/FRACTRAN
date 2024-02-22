@@ -50,14 +50,8 @@ def adder (a b : Nat) := runProg [(2 : Rat) / 3] (2^a * 3^b)
 lemma add_once {m : Int} : next [(2 : Rat) / 3] (3 * m) = 2 * m := by
   unfold next
   simp
-  conv =>
-    lhs
-    congr
-    · rw [← mul_assoc, div_mul, div_self (by norm_num), div_one]
-      rw [two_mul, ← Int.cast_add, ← two_mul]
-    · rw [← mul_assoc, div_mul, div_self (by norm_num), div_one]
-      rw [two_mul, ← Int.cast_add, ← two_mul]
-    · skip
+  repeat rw [← mul_assoc, div_mul, div_self (by norm_num), div_one, two_mul, ← Int.cast_add, ← two_mul]
+  exact rfl
 
 -- runs the adder program on input
 lemma add_some {a b c : Nat} (h : c ≤ b) : adder a b c = 2 ^ (a + c) * 3 ^ (b - c) := by
@@ -92,6 +86,7 @@ lemma add_halts {a n N : Nat} (h : n > N) (last : adder a N N = 2 ^ (a + N)) : a
     exact (Nat.not_lt_zero N) h
   · unfold adder
     unfold runProg
+    -- rw [adder] at ih
     conv =>
       lhs
       rhs
@@ -100,30 +95,35 @@ lemma add_halts {a n N : Nat} (h : n > N) (last : adder a N N = 2 ^ (a + N)) : a
     · rw [h', last]
       unfold next
       simp
-      conv =>
-        lhs
-        congr
-        · rhs
-          rw [div_mul_eq_mul_div, mul_comm, ← pow_succ']
-          skip
-        · rhs
-          rw [div_mul_eq_mul_div, mul_comm, ← pow_succ']
-          skip
-        · unfold next
+      repeat rw [div_mul_eq_mul_div, mul_comm, ← pow_succ']
+      unfold next
       unfold cond
       split
-      · case pos.h_1 _ h'' =>
-        exfalso
-        unfold Rat.isInt at h''
-        --rw [beq_iff_eq] at h'' --inst mismatch instBEq vs instBEqNat ??
+      · case _ h'' =>
+        -- exfalso
+
+        -- unfold Rat.isInt at h''
+        -- apply Rat.den_dvd _ 3 at h''
+        -- refine false_of_true_eq_false (?_ (id last.symm))
+        -- rw [beq_iff_eq _ 1] at h'' --inst mismatch instBEq vs instBEqNat ??
+        -- apply Rat.mul_den at h''
+        -- rw [pow_add, pow_one]
+        -- rw [
+          -- ← Rat.eq_num_of_isInt h'',
+          -- Rat.coe_int_num
+          -- ]
+        -- apply?
+
+        -- rw [Rat.divInt (2 ^ _) 3]
+        -- rw [Rat.mul_den _ (1 / 3)] at h''
 
         sorry
       · exact rfl
     · rw [ih ∘ Ne.lt_of_le' h' ∘ Nat.lt_succ.mp $ h]
       unfold next
       simp
-      conv =>
-        skip
+      exact rfl
+
 
 -- proof that the adder adds two numbers into the 2 register
 -- and for all iterations after that produces 0
