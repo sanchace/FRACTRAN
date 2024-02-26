@@ -91,12 +91,10 @@ lemma add_correct (a b : Nat) : adder a b b = 2 ^ (a + b) := by
 example (a b : Nat) : ((a == b) = true) ↔ (a = b) := by
   exact beq_iff_eq a b
 
-
-theorem gcd_two_pow_x_three_eq_1 (x : Nat) : Int.gcd (2 ^ x) 3 = 1 := by
+lemma gcd_two_pow_x_three_eq_1 (x : Nat) : Int.gcd (2 ^ x) 3 = 1 := by
   refine Int.gcd_eq_one_iff_coprime.mpr ?_
   refine IsCoprime.pow_left ?H
   exact Int.gcd_eq_one_iff_coprime.mp rfl
-
 
 -- proving that the adder will halt (be 0) at some point n > N
 lemma add_halts {a n N : Nat} (h : n > N) (last : adder a N N = 2 ^ (a + N)) : adder a N n = 0 := by
@@ -105,7 +103,6 @@ lemma add_halts {a n N : Nat} (h : n > N) (last : adder a N N = 2 ^ (a + N)) : a
     exact (Nat.not_lt_zero N) h
   · unfold adder
     unfold runProg
-    -- rw [adder] at ih
     conv =>
       lhs
       rhs
@@ -113,23 +110,10 @@ lemma add_halts {a n N : Nat} (h : n > N) (last : adder a N N = 2 ^ (a + N)) : a
     by_cases h' : n = N
     · rw [h', last]
       unfold next
-      -- rw [Rat.divInt_eq_div]
-      -- simp
-      -- repeat rw [
-        -- div_mul_eq_mul_div,
-        -- ENat.con_mul 2 (2 ^ (a + N)),
-        -- ← Rat.cast_id (Rat.divInt 2 3),
-        -- Rat.divInt_eq_div,
-        -- ← Rat.intCast_mul,
-        -- Rat.,
-        -- ← pow_succ',
-      -- ]
-
+      -- lean can't parse this unless it is a hypothesis
       have den_three : (Rat.divInt 2 3).den = 3 := by
-
         rfl
-      have num_two : (Rat.divInt 2 3).num = 2 := by
-        rfl
+      -- same with this
       have mul_divInt_ofInt : (Rat.divInt 2 3 * Rat.ofInt (2 ^ (a + N))) = Rat.divInt (2 * 2 ^ (a + N)) 3 := by
         rw [
           Rat.mul_def,
@@ -139,16 +123,15 @@ lemma add_halts {a n N : Nat} (h : n > N) (last : adder a N N = 2 ^ (a + N)) : a
           conv =>
             lhs
             rw [den_three, Rat.ofInt_den, Nat.mul_one]
-
       conv =>
         lhs
-
         rw [
           ← Rat.ofInt_eq_cast (2 ^ (a + N)),
           mul_divInt_ofInt,
           ← pow_succ,
         ]
-
+      -- this is the critical part as we show that the gcd 2 3 = 1
+      -- this shows that in the case h'' is a contradiction
       have c : (Rat.divInt (2 ^ (a + N + 1)) 3).den = 3 := by
         rw [Rat.den_mk]
         split
@@ -161,15 +144,12 @@ lemma add_halts {a n N : Nat} (h : n > N) (last : adder a N N = 2 ^ (a + N)) : a
             lhs
             rhs
             apply gcd_two_pow_x_three_eq_1 (a + N + 1)
-
       unfold next
       unfold cond
       split
       · case _ h'' =>
-
         have three_neq_one : (3 == 1) = false := by
           rfl
-
         conv at h'' =>
           rw [
             Rat.isInt,
