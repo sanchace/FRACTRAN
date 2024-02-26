@@ -24,7 +24,10 @@ def next' (prog : FProg) (n : Int) : Option Int :=
 def next (prog : FProg) (n : Int) : Int :=
   match prog with
   | []      => 0
-  | q :: qs => cond (Rat.isInt (q * n)) (q * n).num $ next qs n
+  -- | q :: qs => cond (Rat.isInt (q * n)) (q * n).num $ next qs n
+  | q :: qs => (
+    cond (Rat.isInt (q * n)) (q * n).num $ next qs n
+  )
 
 -- list version of runProg
 unsafe def runProg' (prog : FProg) : FRun' :=
@@ -44,20 +47,23 @@ def runProg (prog : FProg) : FRun :=
 --#eval LazyList.toList $ runProg' [(2 : Rat) / 3] n
 --#eval runProg [(2 : Rat) / 3] n 7
 
-def adder (a b : Nat) := runProg [(2 : Rat) / 3] (2^a * 3^b)
+def adder (a b : Nat) := runProg [Rat.divInt 2 3] (2^a * 3^b)
 
 -- runs the program 2/3 once on a multiple of 3 and returns it as a multiple of
-lemma add_once {m : Int} : next [(2 : Rat) / 3] (3 * m) = 2 * m := by
+lemma add_once {m : Int} : next [Rat.divInt 2 3] (3 * m) = 2 * m := by
+  -- unfold Rat.divInt
+  rw [Rat.divInt_eq_div]
   unfold next
   simp
-  conv =>
-    lhs
-    congr
-    · rw [← mul_assoc, div_mul, div_self (by norm_num), div_one]
-      rw [two_mul, ← Int.cast_add, ← two_mul]
-    · rw [← mul_assoc, div_mul, div_self (by norm_num), div_one]
-      rw [two_mul, ← Int.cast_add, ← two_mul]
-    · skip
+  repeat rw [
+    ← mul_assoc,
+    div_mul,
+    div_self (by norm_num),
+    div_one, two_mul,
+    ← Int.cast_add,
+    ← two_mul
+  ]
+  exact rfl
 
 -- runs the adder program on input
 lemma add_some {a b c : Nat} (h : c ≤ b) : adder a b c = 2 ^ (a + c) * 3 ^ (b - c) := by
@@ -66,7 +72,7 @@ lemma add_some {a b c : Nat} (h : c ≤ b) : adder a b c = 2 ^ (a + c) * 3 ^ (b 
     exact rfl
   · conv =>
       congr
-      · change next [(2 : Rat) / 3] $ adder a b c
+      · change next [Rat.divInt 2 3] $ adder a b c
         rw [ih $ le_trans (Nat.le.step Nat.le.refl) h,
           ← Nat.succ_sub_succ b c,
           Nat.succ_sub h,
@@ -85,6 +91,11 @@ lemma add_correct (a b : Nat) : adder a b b = 2 ^ (a + b) := by
 example (a b : Nat) : ((a == b) = true) ↔ (a = b) := by
   exact beq_iff_eq a b
 
+lemma gcd_two_pow_x_three_eq_1 (x : Nat) : Int.gcd (2 ^ x) 3 = 1 := by
+  refine Int.gcd_eq_one_iff_coprime.mpr ?_
+  refine IsCoprime.pow_left ?H
+  exact Int.gcd_eq_one_iff_coprime.mp rfl
+
 -- proving that the adder will halt (be 0) at some point n > N
 lemma add_halts {a n N : Nat} (h : n > N) (last : adder a N N = 2 ^ (a + N)) : adder a N n = 0 := by
   induction' n with n ih
@@ -99,31 +110,63 @@ lemma add_halts {a n N : Nat} (h : n > N) (last : adder a N N = 2 ^ (a + N)) : a
     by_cases h' : n = N
     · rw [h', last]
       unfold next
-      simp
+      -- lean can't parse this unless it is a hypothesis
+      have den_three : (Rat.divInt 2 3).den = 3 := by
+        rfl
+      -- same with this
+      have mul_divInt_ofInt : (Rat.divInt 2 3 * Rat.ofInt (2 ^ (a + N))) = Rat.divInt (2 * 2 ^ (a + N)) 3 := by
+        rw [
+          Rat.mul_def,
+        ]
+        conv =>
+          lhs
+          conv =>
+            lhs
+            rw [den_three, Rat.ofInt_den, Nat.mul_one]
       conv =>
         lhs
-        congr
-        · rhs
-          rw [div_mul_eq_mul_div, mul_comm, ← pow_succ']
-          skip
-        · rhs
-          rw [div_mul_eq_mul_div, mul_comm, ← pow_succ']
-          skip
-        · unfold next
+        rw [
+          ← Rat.ofInt_eq_cast (2 ^ (a + N)),
+          mul_divInt_ofInt,
+          ← pow_succ,
+        ]
+      -- this is the critical part as we show that the gcd 2 3 = 1
+      -- this shows that in the case h'' is a contradiction
+      have c : (Rat.divInt (2 ^ (a + N + 1)) 3).den = 3 := by
+        rw [Rat.den_mk]
+        split
+        · case inl three_eq_zero =>
+          exfalso
+          apply three_ne_zero at three_eq_zero
+          exact three_eq_zero
+        · case inr three_ne_zero =>
+          conv =>
+            lhs
+            rhs
+            apply gcd_two_pow_x_three_eq_1 (a + N + 1)
+      unfold next
       unfold cond
       split
-      · case pos.h_1 _ h'' =>
+      · case _ h'' =>
+        have three_neq_one : (3 == 1) = false := by
+          rfl
+        conv at h'' =>
+          rw [
+            Rat.isInt,
+            c,
+          ]
+          conv =>
+            lhs
+            apply three_neq_one
+          rw [Bool.coe_sort_false]
         exfalso
-        unfold Rat.isInt at h''
-        --rw [beq_iff_eq] at h'' --inst mismatch instBEq vs instBEqNat ??
-
-        sorry
+        exact h''
       · exact rfl
     · rw [ih ∘ Ne.lt_of_le' h' ∘ Nat.lt_succ.mp $ h]
       unfold next
       simp
-      conv =>
-        skip
+      exact rfl
+
 
 -- proof that the adder adds two numbers into the 2 register
 -- and for all iterations after that produces 0
