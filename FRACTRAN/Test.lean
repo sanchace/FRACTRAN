@@ -119,6 +119,7 @@ lemma add_halts {a n N : Nat} (h : n > N) (last : adder a N N = 2 ^ (a + N)) : a
       -- ]
 
       have den_three : (Rat.divInt 2 3).den = 3 := by
+
         rfl
       have num_two : (Rat.divInt 2 3).num = 2 := by
         rfl
@@ -141,7 +142,14 @@ lemma add_halts {a n N : Nat} (h : n > N) (last : adder a N N = 2 ^ (a + N)) : a
           ← pow_succ,
         ]
       have c : (Rat.divInt (2 ^ (a + N + 1)) 3).den = 3 := by
-        exact?
+        rw [Rat.den_mk]
+        split
+        · case inl three_eq_zero =>
+          exfalso
+          apply three_ne_zero at three_eq_zero
+          exact three_eq_zero
+
+
 
 
       unfold next
@@ -149,87 +157,25 @@ lemma add_halts {a n N : Nat} (h : n > N) (last : adder a N N = 2 ^ (a + N)) : a
       split
       · case _ h'' =>
 
-        rw [
-          Rat.isInt,
-          Rat.mul_def,
-          Rat.ofInt_den (2 ^ (a + N)),
-        ] at h''
-        have c : Nat.gcd (Int.natAbs ) d = 1 := by
-          sorry
+        have three_neq_one : (3 == 1) = false := by
+          rfl
 
-        exfalso
-        -- conv =>
-          -- lhs
-          -- rw [← Rat.eq_num_of_isInt]
-
-
-        rw [Rat.isInt] at h''
-        rw [
-          -- Rat.divInt_eq_div,
-          -- Rat.intCast_mul,
-
-
-          -- ← Rat.coe_int_div,
-          -- Rat.mul_comm
-        ] at h''
-
-
-
-        -- rw [Rat.mul_num]
-          -- lhs
-
-          -- rfl
-
-          -- lhs
-          -- conv =>
-          --   rhs
-          --   lhs
-          --   conv =>
-          --     rhs
-          --     rw [Rat.ofInt_den]
-          --   rw [Nat.mul_one]
-
-
-        -- unfold Rat.den at h''
-        -- have den_not_one: Rat.normalize (_) ((Rat.divInt 2 3)) = Rat := by
-          -- rw [Rat.ofInt_den]
-        -- rw [int_one] at h''
-        -- unfold Rat.ofInt at h''
-
-        -- apply Rat.ofInt_den (2 ^ (a + N)) at h''
-        -- conv =>
-        --   lhs
-        --   rhs
-        --   change ↑ (2 / 3 * 2 ^ (a + N))
-
-        -- unfold Rat.isInt at h''
-        -- apply Rat.den_dvd _ 3 at h''
-        -- refine false_of_true_eq_false (?_ (id last.symm))
         conv at h'' =>
-
-          rw [beq_iff_eq _ 1]
-
-
-           --inst mismatch instBEq vs instBEqNat ??
-        -- apply Rat.mul_den at h''
-        -- rw [pow_add, pow_one]
-        -- rw [
-          -- ← Rat.eq_num_of_isInt h'',
-          -- Rat.coe_int_num
-          -- ]
-        -- apply?
-
-        -- rw [Rat.divInt (2 ^ _) 3]
-        -- rw [Rat.mul_den _ (1 / 3)] at h''
-
-        sorry
+          rw [
+            Rat.isInt,
+            c,
+          ]
+          conv =>
+            lhs
+            apply three_neq_one
+          rw [Bool.coe_sort_false]
+        exfalso
+        exact h''
       · exact rfl
     · rw [ih ∘ Ne.lt_of_le' h' ∘ Nat.lt_succ.mp $ h]
       unfold next
       simp
       exact rfl
-
-
 
 -- proving that the adder will halt (be 0) at some point n > N
 lemma add_halts' {a n N : Nat} (h : n > N) (last : adder a N N = 2 ^ (a + N)) : adder a N n = 0 := by
