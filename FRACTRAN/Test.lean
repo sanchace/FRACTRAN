@@ -44,13 +44,22 @@ def runProg (prog : FProg) : FRun :=
 --#eval LazyList.toList $ runProg' [(2 : Rat) / 3] n
 --#eval runProg [(2 : Rat) / 3] n 7
 
-def adder (a b : Nat) := runProg [(2 : Rat) / 3] (2^a * 3^b)
+def adder (a b : Nat) := runProg [Rat.divInt 2 3] (2^a * 3^b)
 
 -- runs the program 2/3 once on a multiple of 3 and returns it as a multiple of
-lemma add_once {m : Int} : next [(2 : Rat) / 3] (3 * m) = 2 * m := by
+lemma add_once {m : Int} : next [Rat.divInt 2 3] (3 * m) = 2 * m := by
+  -- unfold Rat.divInt
+  rw [Rat.divInt_eq_div]
   unfold next
   simp
-  repeat rw [← mul_assoc, div_mul, div_self (by norm_num), div_one, two_mul, ← Int.cast_add, ← two_mul]
+  repeat rw [
+    ← mul_assoc,
+    div_mul,
+    div_self (by norm_num),
+    div_one, two_mul,
+    ← Int.cast_add,
+    ← two_mul
+  ]
   exact rfl
 
 -- runs the adder program on input
@@ -60,7 +69,7 @@ lemma add_some {a b c : Nat} (h : c ≤ b) : adder a b c = 2 ^ (a + c) * 3 ^ (b 
     exact rfl
   · conv =>
       congr
-      · change next [(2 : Rat) / 3] $ adder a b c
+      · change next [Rat.divInt 2 3] $ adder a b c
         rw [ih $ le_trans (Nat.le.step Nat.le.refl) h,
           ← Nat.succ_sub_succ b c,
           Nat.succ_sub h,
@@ -94,13 +103,78 @@ lemma add_halts {a n N : Nat} (h : n > N) (last : adder a N N = 2 ^ (a + N)) : a
     by_cases h' : n = N
     · rw [h', last]
       unfold next
-      simp
-      repeat rw [div_mul_eq_mul_div, mul_comm, ← pow_succ']
+      -- rw [Rat.divInt_eq_div]
+      -- simp
+      repeat rw [
+        -- div_mul_eq_mul_div,
+        -- ENat.con_mul 2 (2 ^ (a + N)),
+        -- ← Rat.cast_id (Rat.divInt 2 3),
+        Rat.divInt_eq_div,
+        -- ← Rat.intCast_mul,
+        mul_comm,
+        ← pow_succ'
+      ]
+      -- conv =>
+      --   lhs
+      --   lhs
+
+      --   rw [
+      --     ← Rat.ofInt_eq_cast (2 ^ (a + N)),
+      --     Rat.mul_def,
+      --   ]
+      --   conv =>
+      --     rhs
+      --     lhs
+      --     rhs
+      --     rw [Rat.ofInt_den]
+
+        -- have h''' : := by
+
+
+
       unfold next
       unfold cond
       split
       · case _ h'' =>
-        -- exfalso
+        exfalso
+        rw [Rat.isInt] at h''
+        rw [
+          -- Rat.divInt_eq_div,
+          -- Rat.intCast_mul,
+          ← Rat.ofInt_eq_cast (2 ^ (a + N)),
+
+          -- ← Rat.coe_int_div,
+          -- Rat.mul_comm
+        ] at h''
+        rw [Rat.mul_def,] at h''
+        conv at h'' =>
+          lhs
+          lhs
+          conv =>
+            rhs
+            lhs
+            conv =>
+              rhs
+              rw [Rat.ofInt_den]
+            rw [Nat.mul_one]
+
+        conv at h'' =>
+          lhs
+
+
+
+
+        -- unfold Rat.den at h''
+        -- have den_not_one: Rat.normalize (_) ((Rat.divInt 2 3)) = Rat := by
+          -- rw [Rat.ofInt_den]
+        -- rw [int_one] at h''
+        -- unfold Rat.ofInt at h''
+
+        -- apply Rat.ofInt_den (2 ^ (a + N)) at h''
+        -- conv =>
+        --   lhs
+        --   rhs
+        --   change ↑ (2 / 3 * 2 ^ (a + N))
 
         -- unfold Rat.isInt at h''
         -- apply Rat.den_dvd _ 3 at h''
@@ -123,6 +197,15 @@ lemma add_halts {a n N : Nat} (h : n > N) (last : adder a N N = 2 ^ (a + N)) : a
       unfold next
       simp
       exact rfl
+
+-- lemma normalize_den {num den : Nat} : (Rat.normalize num).den = 1 := by
+--   refine (Rat.den_eq_one_iff (Rat.normalize (↑num) 1)).mpr ?_
+--   refine ?self.out.symm
+--   apply?
+--   sorry
+
+
+
 
 -- proving that the adder will halt (be 0) at some point n > N
 lemma add_halts' {a n N : Nat} (h : n > N) (last : adder a N N = 2 ^ (a + N)) : adder a N n = 0 := by
