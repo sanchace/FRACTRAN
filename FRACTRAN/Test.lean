@@ -91,6 +91,13 @@ lemma add_correct (a b : Nat) : adder a b b = 2 ^ (a + b) := by
 example (a b : Nat) : ((a == b) = true) ↔ (a = b) := by
   exact beq_iff_eq a b
 
+
+theorem gcd_two_pow_x_three_eq_1 (x : Nat) : Int.gcd (2 ^ x) 3 = 1 := by
+  refine Int.gcd_eq_one_iff_coprime.mpr ?_
+  refine IsCoprime.pow_left ?H
+  exact Int.gcd_eq_one_iff_coprime.mp rfl
+
+
 -- proving that the adder will halt (be 0) at some point n > N
 lemma add_halts {a n N : Nat} (h : n > N) (last : adder a N N = 2 ^ (a + N)) : adder a N n = 0 := by
   induction' n with n ih
@@ -141,6 +148,7 @@ lemma add_halts {a n N : Nat} (h : n > N) (last : adder a N N = 2 ^ (a + N)) : a
           mul_divInt_ofInt,
           ← pow_succ,
         ]
+
       have c : (Rat.divInt (2 ^ (a + N + 1)) 3).den = 3 := by
         rw [Rat.den_mk]
         split
@@ -148,9 +156,11 @@ lemma add_halts {a n N : Nat} (h : n > N) (last : adder a N N = 2 ^ (a + N)) : a
           exfalso
           apply three_ne_zero at three_eq_zero
           exact three_eq_zero
-
-
-
+        · case inr three_ne_zero =>
+          conv =>
+            lhs
+            rhs
+            apply gcd_two_pow_x_three_eq_1 (a + N + 1)
 
       unfold next
       unfold cond
@@ -176,52 +186,6 @@ lemma add_halts {a n N : Nat} (h : n > N) (last : adder a N N = 2 ^ (a + N)) : a
       unfold next
       simp
       exact rfl
-
--- proving that the adder will halt (be 0) at some point n > N
-lemma add_halts' {a n N : Nat} (h : n > N) (last : adder a N N = 2 ^ (a + N)) : adder a N n = 0 := by
-  induction' n with n ih
-  · exfalso
-    exact (Nat.not_lt_zero N) h
-  · unfold adder
-    unfold runProg
-
-    conv =>
-      lhs
-      rhs
-      change adder a N n
-
-    by_cases h' : n = N
-    · rw [h', last]
-      unfold next
-      simp
-      repeat rw [div_mul_eq_mul_div, mul_comm, ← pow_succ']
-      unfold next
-      unfold cond
-      split
-      · case _ h'' =>
-
-        -- conv at h'' =>
-        -- rw [Rat.eq_num_of_isInt]
-        -- exfalso
-        -- rw [Rat.eq_num_of_isInt]
-        rw [Rat.isInt, Nat.beq_eq_true_eq] at h''
-
-
-        let g := Rat.divInt 2 3
-
-        let den := Rat.isInt g
-        unfold Rat.isInt at den
-
-        -- rw [Rat.num_ne_zero_of_ne_zero]
-
-
-      · exact rfl
-    · rw [ih ∘ Ne.lt_of_le' h' ∘ Nat.lt_succ.mp $ h]
-      unfold next
-      simp
-      exact rfl
-
-
 
 
 -- proof that the adder adds two numbers into the 2 register
