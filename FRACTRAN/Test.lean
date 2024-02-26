@@ -24,7 +24,10 @@ def next' (prog : FProg) (n : Int) : Option Int :=
 def next (prog : FProg) (n : Int) : Int :=
   match prog with
   | []      => 0
-  | q :: qs => cond (Rat.isInt (q * n)) (q * n).num $ next qs n
+  -- | q :: qs => cond (Rat.isInt (q * n)) (q * n).num $ next qs n
+  | q :: qs => (
+    cond (Rat.isInt (q * n)) (q * n).num $ next qs n
+  )
 
 -- list version of runProg
 unsafe def runProg' (prog : FProg) : FRun' :=
@@ -105,63 +108,86 @@ lemma add_halts {a n N : Nat} (h : n > N) (last : adder a N N = 2 ^ (a + N)) : a
       unfold next
       -- rw [Rat.divInt_eq_div]
       -- simp
-      repeat rw [
+      -- repeat rw [
         -- div_mul_eq_mul_div,
         -- ENat.con_mul 2 (2 ^ (a + N)),
         -- ← Rat.cast_id (Rat.divInt 2 3),
-        Rat.divInt_eq_div,
+        -- Rat.divInt_eq_div,
         -- ← Rat.intCast_mul,
-        mul_comm,
-        ← pow_succ'
-      ]
-      -- conv =>
-      --   lhs
-      --   lhs
+        -- Rat.,
+        -- ← pow_succ',
+      -- ]
 
-      --   rw [
-      --     ← Rat.ofInt_eq_cast (2 ^ (a + N)),
-      --     Rat.mul_def,
-      --   ]
-      --   conv =>
-      --     rhs
-      --     lhs
-      --     rhs
-      --     rw [Rat.ofInt_den]
+      have den_three : (Rat.divInt 2 3).den = 3 := by
+        rfl
+      have num_two : (Rat.divInt 2 3).num = 2 := by
+        rfl
+      have mul_divInt_ofInt : (Rat.divInt 2 3 * Rat.ofInt (2 ^ (a + N))) = Rat.divInt (2 * 2 ^ (a + N)) 3 := by
+        rw [
+          Rat.mul_def,
+        ]
+        conv =>
+          lhs
+          conv =>
+            lhs
+            rw [den_three, Rat.ofInt_den, Nat.mul_one]
 
-        -- have h''' : := by
+      conv =>
+        lhs
 
+        rw [
+          ← Rat.ofInt_eq_cast (2 ^ (a + N)),
+          mul_divInt_ofInt,
+          ← pow_succ,
+        ]
+      have c : (Rat.divInt (2 ^ (a + N + 1)) 3).den = 3 := by
+        exact?
 
 
       unfold next
       unfold cond
       split
       · case _ h'' =>
+
+        rw [
+          Rat.isInt,
+          Rat.mul_def,
+          Rat.ofInt_den (2 ^ (a + N)),
+        ] at h''
+        have c : Nat.gcd (Int.natAbs ) d = 1 := by
+          sorry
+
         exfalso
+        -- conv =>
+          -- lhs
+          -- rw [← Rat.eq_num_of_isInt]
+
+
         rw [Rat.isInt] at h''
         rw [
           -- Rat.divInt_eq_div,
           -- Rat.intCast_mul,
-          ← Rat.ofInt_eq_cast (2 ^ (a + N)),
+
 
           -- ← Rat.coe_int_div,
           -- Rat.mul_comm
         ] at h''
-        rw [Rat.mul_def,] at h''
-        conv at h'' =>
-          lhs
-          lhs
-          conv =>
-            rhs
-            lhs
-            conv =>
-              rhs
-              rw [Rat.ofInt_den]
-            rw [Nat.mul_one]
-
-        conv at h'' =>
-          lhs
 
 
+
+        -- rw [Rat.mul_num]
+          -- lhs
+
+          -- rfl
+
+          -- lhs
+          -- conv =>
+          --   rhs
+          --   lhs
+          --   conv =>
+          --     rhs
+          --     rw [Rat.ofInt_den]
+          --   rw [Nat.mul_one]
 
 
         -- unfold Rat.den at h''
@@ -179,7 +205,12 @@ lemma add_halts {a n N : Nat} (h : n > N) (last : adder a N N = 2 ^ (a + N)) : a
         -- unfold Rat.isInt at h''
         -- apply Rat.den_dvd _ 3 at h''
         -- refine false_of_true_eq_false (?_ (id last.symm))
-        -- rw [beq_iff_eq _ 1] at h'' --inst mismatch instBEq vs instBEqNat ??
+        conv at h'' =>
+
+          rw [beq_iff_eq _ 1]
+
+
+           --inst mismatch instBEq vs instBEqNat ??
         -- apply Rat.mul_den at h''
         -- rw [pow_add, pow_one]
         -- rw [
@@ -197,13 +228,6 @@ lemma add_halts {a n N : Nat} (h : n > N) (last : adder a N N = 2 ^ (a + N)) : a
       unfold next
       simp
       exact rfl
-
--- lemma normalize_den {num den : Nat} : (Rat.normalize num).den = 1 := by
---   refine (Rat.den_eq_one_iff (Rat.normalize (↑num) 1)).mpr ?_
---   refine ?self.out.symm
---   apply?
---   sorry
-
 
 
 
@@ -230,6 +254,8 @@ lemma add_halts' {a n N : Nat} (h : n > N) (last : adder a N N = 2 ^ (a + N)) : 
       split
       · case _ h'' =>
 
+        -- conv at h'' =>
+        -- rw [Rat.eq_num_of_isInt]
         -- exfalso
         -- rw [Rat.eq_num_of_isInt]
         rw [Rat.isInt, Nat.beq_eq_true_eq] at h''
