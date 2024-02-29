@@ -1,5 +1,7 @@
 import Mathlib.Data.LazyList
 import Mathlib.Tactic
+import Std.Data.Rat.Basic
+open Rat -- Gives the /. infix notation for a /. b ↔ Rat.divInt a b
 
 -- FRACTRAN Program
 -- Complete Syntax of FRACTRAN
@@ -10,7 +12,7 @@ def FProg : Type := List Rat
 def FRun : Type := Int → Nat → Int
 
 -- list of program states
-def FRun' : Type := Int -> LazyList Int
+def FRun' : Type := Int → LazyList Int
 
 -- same as next but with the option monad
 def next' (prog : FProg) (n : Int) : Option Int :=
@@ -47,10 +49,10 @@ def runProg (prog : FProg) : FRun :=
 --#eval LazyList.toList $ runProg' [(2 : Rat) / 3] n
 --#eval runProg [(2 : Rat) / 3] n 7
 
-def adder (a b : Nat) := runProg [Rat.divInt 2 3] (2^a * 3^b)
+def adder (a b : Nat) := runProg [2 /. 3] (2^a * 3^b)
 
 -- runs the program 2/3 once on a multiple of 3 and returns it as a multiple of
-lemma add_once {m : Int} : next [Rat.divInt 2 3] (3 * m) = 2 * m := by
+lemma add_once {m : Int} : next [2 /. 3] (3 * m) = 2 * m := by
   -- unfold Rat.divInt
   rw [Rat.divInt_eq_div]
   unfold next
@@ -72,7 +74,7 @@ lemma add_some {a b c : Nat} (h : c ≤ b) : adder a b c = 2 ^ (a + c) * 3 ^ (b 
     exact rfl
   · conv =>
       congr
-      · change next [Rat.divInt 2 3] $ adder a b c
+      · change next [2 /. 3] $ adder a b c
         rw [ih $ le_trans (Nat.le.step Nat.le.refl) h,
           ← Nat.succ_sub_succ b c,
           Nat.succ_sub h,
@@ -111,10 +113,10 @@ lemma add_halts {a n N : Nat} (h : n > N) (last : adder a N N = 2 ^ (a + N)) : a
     · rw [h', last]
       unfold next
       -- lean can't parse this unless it is a hypothesis
-      have den_three : (Rat.divInt 2 3).den = 3 := by
+      have den_three : (2 /. 3).den = 3 := by
         rfl
       -- same with this
-      have mul_divInt_ofInt : (Rat.divInt 2 3 * Rat.ofInt (2 ^ (a + N))) = Rat.divInt (2 * 2 ^ (a + N)) 3 := by
+      have mul_divInt_ofInt : ((2 /. 3) * Rat.ofInt (2 ^ (a + N))) = (2 * 2 ^ (a + N)) /. 3 := by
         rw [
           Rat.mul_def,
         ]
@@ -132,7 +134,7 @@ lemma add_halts {a n N : Nat} (h : n > N) (last : adder a N N = 2 ^ (a + N)) : a
         ]
       -- this is the critical part as we show that the gcd 2 3 = 1
       -- this shows that in the case h'' is a contradiction
-      have c : (Rat.divInt (2 ^ (a + N + 1)) 3).den = 3 := by
+      have c : ((2 ^ (a + N + 1)) /. 3).den = 3 := by
         rw [Rat.den_mk]
         split
         · case inl three_eq_zero =>
