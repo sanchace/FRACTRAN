@@ -32,5 +32,5 @@ lemma prime_game_doesnt_halt : ∀ n : Nat, prime_game n ≠ 0 :=
 -- This is much weaker than the actual prime game theorem (doesn't show that it
 -- generates every prime, doesn't show they're in order of magnitude, etc).
 -- TODO is this something we want to actually formalize?
-theorem prime_game_primes : ∀ n : Nat, ∃ p : Nat, (prime_game n = 2^p → Nat.Prime p) :=
+theorem prime_game_primes : ∀ n : Nat, ∀ p : Nat, (prime_game n = 2^p → Nat.Prime p) :=
   sorry
