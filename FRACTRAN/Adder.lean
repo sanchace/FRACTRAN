@@ -1,4 +1,4 @@
-import Fractran.Basic
+import FRACTRAN.Basic
 import Mathlib.Tactic
 
 open Rat -- Gives the /. infix notation for a /. b ↔ Rat.divInt a b
