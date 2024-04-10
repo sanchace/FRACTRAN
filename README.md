@@ -100,3 +100,7 @@ It is also worth mentioning that most of the structures we import from
 `Init` and `Std` have analogous definitions `Mathlib` which are
 typically downstream.  We might switch to importing exclusively from
 `Mathlib` in the future.
+
+# Contributing
+Email me at zbp.yvnzt@erqankrynpmrupanf (string reversed and rot13)
+with your github profile and I'll add you as a collaborator.
