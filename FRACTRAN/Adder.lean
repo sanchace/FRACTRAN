@@ -128,7 +128,6 @@ lemma add_halts {a n N : Nat} (h : n > N) (last : adder a N N = 2 ^ (a + N)) : a
       simp
       exact rfl
 
-
 -- proof that the adder adds two numbers into the 2 register
 -- and for all iterations after that produces 0
 theorem adder_adds : ∀ a b : Nat, ∃ K : Nat, (adder a b K = 2^(a + b) ∧ ∀ n : Nat, n > K → adder a b n = 0) := by
