@@ -1,4 +1,4 @@
-import Std.Data.Rat.Basic
+import Mathlib.Data.Rat.Defs
 
 -- FRACTRAN Program
 -- Complete Syntax of FRACTRAN
@@ -15,7 +15,7 @@ def next (prog : FProg) (n : Int) : Int :=
   -- | q :: qs => cond (Rat.isInt (q * n)) (q * n).num $ next qs n
   | q :: qs => (
     --cond (Rat.isInt (q * n)) (q * n).num $ next qs n
-    cond (Int.ofNat q.den ∣ n) ((n / q.den) * q.num) $ next qs n 
+    if _ : (↑ q.den ∣ n) then ((n / q.den) * q.num) else next qs n 
   )
 
 -- computes the run of FRACTRAN program and input
