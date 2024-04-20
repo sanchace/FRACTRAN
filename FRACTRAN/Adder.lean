@@ -58,6 +58,9 @@ lemma add_correct (a b : Nat) : adder a b b = 2 ^ (a + b) := by
 --   refine IsCoprime.pow_left ?H
 --   exact Int.gcd_eq_one_iff_coprime.mp rfl
 
+lemma number_theory (b : Nat) : ¬ ((3:Int) ∣ (2 : Int) ^ b) := by
+  
+  sorry
 -- proving that the adder will halt (be 0) at some point n > N
 lemma add_halts {a n N : Nat} (h : n > N) (last : adder a N N = 2 ^ (a + N)) : adder a N n = 0 := by
   induction' n with n ih
@@ -73,10 +76,9 @@ lemma add_halts {a n N : Nat} (h : n > N) (last : adder a N N = 2 ^ (a + N)) : a
       unfold next
       have : ↑(2 /. 3).den = (3 : Int) := rfl
       rw [this]
-      have (b : Nat) : ¬ ((3 : Int) ∣ (2 : Int) ^ b) := by
-        
-        sorry
-      simp [this (a + N)]
+      -- have (b : Nat) : ¬ ((3 : Int) ∣ (2 : Int) ^ b) := by
+      --   sorry
+      simp [number_theory (a + N)]
     · apply ih at h
       unfold adder
       unfold runProg
