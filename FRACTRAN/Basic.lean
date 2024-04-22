@@ -4,21 +4,19 @@ import Mathlib.Data.Rat.Defs
 -- Complete Syntax of FRACTRAN
 def FProg : Type := List Rat
 
--- sequence of states (run) of FRACTRAN Program and input
+-- Sequence of states (run) of FRACTRAN Program and input
 -- Complete Semantics of FRACTRAN
 def FRun : Type := Int → Nat → Int
 
--- gets the number that when multiplied by a fraction in the FProg is integral
+-- Computes the next state
 def next (prog : FProg) (n : Int) : Int :=
   match prog with
   | []      => 0
-  -- | q :: qs => cond (Rat.isInt (q * n)) (q * n).num $ next qs n
   | q :: qs => (
-    --cond (Rat.isInt (q * n)) (q * n).num $ next qs n
     if frac_divs : (↑ q.den ∣ n) then ((n / q.den) * q.num) else next qs n 
   )
 
--- computes the run of FRACTRAN program and input
+-- Computes the run of FRACTRAN program and input
 -- Complete Implementation of FRACTRAN
 def runProg (prog : FProg) : FRun :=
   fun z n ↦ match n with
