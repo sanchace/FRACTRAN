@@ -73,3 +73,28 @@ theorem adder_adds : ∀ a b : Nat, ∃ K : Nat, (adder a b K = 2^(a + b) ∧ �
   · exact add_correct a b
   · intro n h
     exact add_halts h $ add_correct a b
+    
+-- Generalize the previous result to other adder implementations
+
+variable (p q : Nat)
+variable (pp : Nat.Prime p)
+variable (pq : Nat.Prime q)
+variable (pneq : p ≠ q)
+
+def adder_general (a b : Nat) := runProg [p /. q] (p^a * q^b) 
+
+lemma add_correct_general (a b : Nat) : adder_general a b b = 2 ^ (a + b) := by
+  sorry
+
+lemma add_halts_general {a n N : Nat} (h : n > N)
+      (last : adder_general a N N = 2 ^ (a + N)) : adder_general a N n = 0 := by
+  sorry
+
+theorem adder_general_adds : ∀ a b : Nat, ∃ K : Nat, 
+      (adder_general a b K = 2^(a + b) ∧ ∀ n : Nat, n > K → adder_general a b n = 0) := by
+  intro a b
+  use b
+  constructor
+  · exact add_correct_general a b
+  · intro n h
+    exact add_halts_general h $ add_correct_general a b
