@@ -73,8 +73,11 @@ theorem adder_adds : ∀ a b : Nat, ∃ K : Nat, (adder a b K = 2^(a + b) ∧ �
   · exact add_correct a b
   · intro n h
     exact add_halts h $ add_correct a b
-    
+
 -- Generalize the previous result to other adder implementations
+
+example (a : ℤ) (h : b ≠ 0) : a * b / b = a := by
+  exact Int.mul_ediv_cancel a h
 
 variable (p q : Nat)
 variable (pp : Nat.Prime p)
@@ -83,26 +86,42 @@ variable (pneq : p ≠ q)
 
 def adder_general (a b : Nat) := runProg [p /. q] (p^a * q^b)
 
+
 lemma add_once_general {m : Int}: next [p /. q] (q * m) = p * m := by
-  sorry
+  unfold next
+  have : ↑(↑p/.↑q).den = ↑q := by
+    sorry
+  rw [this]
+  have : ↑(↑p/.↑q).num = ↑p := by
+    sorry
+  rw [this]
+  simp
+  rw [mul_comm]
+  have : (↑q * m / ↑q) = m := by
+    rw [mul_comm]
+    apply Int.mul_ediv_cancel m _
+    intro h
+    have : q = 0 := Int.ofNat_eq_zero.mp h
+    apply Nat.Prime.ne_zero pq
+    assumption
+  rw [this]
 
 lemma add_some_general {a b c : Nat} (h : c ≤ b) : adder_general a b c = p ^ (a + c) * q ^ (b - c) := by
-  
   sorry
 
 lemma add_correct_general (a b : Nat) : adder_general a b b = p ^ (a + b) := by
   convert add_some_general p q (le_refl b)
   rw [Nat.sub_self, pow_zero, mul_one]
-  
+
 lemma add_halts_general {a n N : Nat} (h : n > N)
       (last : adder_general a N N = p ^ (a + N)) : adder_general a N n = 0 := by
   sorry
 
-theorem adder_general_adds : ∀ a b : Nat, ∃ K : Nat, 
+theorem adder_general_adds : ∀ a b : Nat, ∃ K : Nat,
       (adder_general a b K = p^(a + b) ∧ ∀ n : Nat, n > K → adder_general a b n = 0) := by
   intro a b
   use b
   constructor
-  · exact add_correct_general p q a b 
+  · exact add_correct_general p q a b
   · intro n h
     exact add_halts_general p h $ add_correct_general p q a b
