@@ -24,8 +24,9 @@ lemma add_some {a b c : Nat} (h : c ≤ b) : adder a b c = 2 ^ (a + c) * 3 ^ (b 
           pow_succ 3 _,
           ← mul_assoc,
           mul_comm _ 3]
+        right
+        rw [mul_assoc]
       · rw [Nat.add_succ, pow_succ, mul_assoc]
-    rw [mul_assoc 3 _]
     exact add_once
 
 -- Adder computes the right number every time (better than chatGPT)
@@ -99,29 +100,28 @@ lemma add_once_general {m : Int}: next [p /. q] (q * m) = p * m := by
   rw [mul_comm]
   have : (↑q * m / ↑q) = m := by
     rw [mul_comm]
-    apply Int.mul_ediv_cancel m _
-    intro h
-    have : q = 0 := Int.ofNat_eq_zero.mp h
-    apply Nat.Prime.ne_zero pq
-    assumption
+    exact Int.mul_ediv_cancel m $ Nat.Prime.ne_zero pq ∘ Int.ofNat_eq_zero.mp
   rw [this]
 
-lemma add_some_general {a b c : Nat} (h : c ≤ b) : adder_general a b c = p ^ (a + c) * q ^ (b - c) := by
-  sorry
+lemma add_some_general {a b c : Nat} (h : c ≤ b) : adder_general p q a b c = p ^ (a + c) * q ^ (b - c) := by
+  induction' c with c ih
+  · rw [Nat.add_zero, Nat.sub_zero]
+    exact rfl
+  · sorry
 
-lemma add_correct_general (a b : Nat) : adder_general a b b = p ^ (a + b) := by
+lemma add_correct_general (a b : Nat) : adder_general p q a b b = p ^ (a + b) := by
   convert add_some_general p q (le_refl b)
   rw [Nat.sub_self, pow_zero, mul_one]
 
 lemma add_halts_general {a n N : Nat} (h : n > N)
-      (last : adder_general a N N = p ^ (a + N)) : adder_general a N n = 0 := by
+      (last : adder_general p q a N N = p ^ (a + N)) : adder_general p q a N n = 0 := by
   sorry
 
 theorem adder_general_adds : ∀ a b : Nat, ∃ K : Nat,
-      (adder_general a b K = p^(a + b) ∧ ∀ n : Nat, n > K → adder_general a b n = 0) := by
+      (adder_general p q a b K = p^(a + b) ∧ ∀ n : Nat, n > K → adder_general p q a b n = 0) := by
   intro a b
   use b
   constructor
   · exact add_correct_general p q a b
   · intro n h
-    exact add_halts_general p h $ add_correct_general p q a b
+    exact add_halts_general p q h $ add_correct_general p q a b
