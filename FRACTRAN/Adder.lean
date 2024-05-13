@@ -107,7 +107,11 @@ lemma add_some_general {a b c : Nat} (h : c ≤ b) : adder_general p q a b c = p
   induction' c with c ih
   · rw [Nat.add_zero, Nat.sub_zero]
     exact rfl
-  · sorry
+  · conv =>
+      left
+      change next [p /. q] $ adder_general p q a b c 
+      rw [ih $ le_trans (Nat.le.step Nat.le.refl) h]
+    sorry
 
 lemma add_correct_general (a b : Nat) : adder_general p q a b b = p ^ (a + b) := by
   convert add_some_general p q (le_refl b)
