@@ -107,13 +107,28 @@ lemma add_some_general {a b c : Nat} (h : c ≤ b) : adder_general p q a b c = p
   · rw [Nat.add_zero, Nat.sub_zero]
     exact rfl
   · conv =>
-      left
-      change next [p /. q] $ adder_general p q a b c 
-      rw [ih $ le_trans (Nat.le.step Nat.le.refl) h]
-    sorry
+      congr
+      · change next [p /. q] $ adder_general p q a b c 
+        right
+        rw [ih $ le_trans (Nat.le.step Nat.le.refl) h,
+            ← Nat.succ_sub_succ b c,
+            Nat.succ_sub h,
+            pow_succ,
+            ← mul_assoc]
+        conv =>
+          left
+          rw [mul_comm]
+          rfl
+        rw [mul_assoc]
+        rfl
+      · rw [Nat.add_succ,
+            pow_succ,
+            mul_assoc]
+        rfl
+    exact add_once_general p q pq
 
 lemma add_correct_general (a b : Nat) : adder_general p q a b b = p ^ (a + b) := by
-  convert add_some_general p q (le_refl b)
+  convert add_some_general p q pq (le_refl b)
   rw [Nat.sub_self, pow_zero, mul_one]
 
 lemma add_halts_general {a n N : Nat} (h : n > N)
@@ -125,6 +140,6 @@ theorem adder_general_adds : ∀ a b : Nat, ∃ K : Nat,
   intro a b
   use b
   constructor
-  · exact add_correct_general p q a b
+  · exact add_correct_general p q pq a b
   · intro n h
-    exact add_halts_general p q h $ add_correct_general p q a b
+    exact add_halts_general p q h $ add_correct_general p q pq a b
