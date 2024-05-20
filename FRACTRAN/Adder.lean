@@ -87,7 +87,6 @@ variable (pneq : p ≠ q)
 
 def adder_general (a b : Nat) := runProg [p /. q] (p^a * q^b)
 
-
 lemma add_once_general {m : Int}: next [p /. q] (q * m) = p * m := by
   unfold next
   have : ↑(↑p/.↑q).den = ↑q := by
