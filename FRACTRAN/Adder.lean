@@ -90,9 +90,17 @@ def adder_general (a b : Nat) := runProg [p /. q] (p^a * q^b)
 lemma add_once_general {m : Int}: next [p /. q] (q * m) = p * m := by
   unfold next
   have : ↑(↑p/.↑q).den = ↑q := by
+    rw [Rat.den_mk]
+    simp [Nat.Prime.ne_zero pq]
+    -- by_cases h' : q = 0
+    -- · simp [h']
+    --   sorry
+    -- · simp [h']
+    --   sorry
     sorry
   rw [this]
   have : ↑(↑p/.↑q).num = ↑p := by
+    rw [Rat.num_mk]
     sorry
   rw [this]
   simp
@@ -143,3 +151,24 @@ theorem adder_general_adds : ∀ a b : Nat, ∃ K : Nat,
   · exact add_correct_general p q pq a b
   · intro n h
     exact add_halts_general p q h $ add_correct_general p q pq a b
+
+def adder_stateful (a b : Nat) := runProg [14 /. 15, 5 /. 7, 1 /. 5] (2 ^ a * 3 ^ b * 5)
+
+#eval adder_stateful 1 2 5
+
+lemma add_correct_stateful (a b : Nat) : adder_stateful a b (2 * b + 1) = 2 ^ (a + b) := by
+  sorry
+  
+lemma add_halts_stateful {a n N : Nat} (h : n > 2 * N + 1)
+      (last : adder_stateful a N (2 * N + 1) = 2 ^ (a + N)) : adder_stateful a N n = 0 := by
+  sorry
+
+theorem adder_stateful_adds : ∀ a b : Nat, ∃ K : Nat,
+      (adder_stateful a b K = 2 ^ (a + b) ∧ ∀ n : Nat, n > K → adder_stateful a b n = 0) := by
+  intro a b
+  use 2 * b + 1
+  constructor
+  · exact add_correct_stateful a b
+  · intro n h
+    exact add_halts_stateful h $ add_correct_stateful a b
+
